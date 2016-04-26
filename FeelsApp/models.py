@@ -3,6 +3,23 @@ from werkzeug import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+#use the below to load a sql script but don't know where this would be executed
+def init_from_script(script):
+    Base.metadata.drop_all(db_engine)
+    Base.metadata.create_all(db_engine)
+
+    # HACK ALERT: we can do this using sqlite3 low level api, then reopen session.
+    f = open(script)
+    script_str = f.read().strip()
+    global db_session
+    db_session.close()
+    import sqlite3
+    conn = sqlite3.connect(db_file_name)
+    conn.executescript(script_str)
+    conn.commit()
+
+    db_session = Session()
+
 class User(db.Model):
   __tablename__ = 'users'
   uid = db.Column(db.Integer, primary_key = True)
@@ -23,6 +40,7 @@ class User(db.Model):
   def check_password(self, password):
     return check_password_hash(self.pwdhash, password)
 
+#Don't know if Categor1, Category2, etc., are being generated correctly, some error when execuing app, may need to make a new models.pyc
 class Category1(db.Model):
     __tablename__= 'c1'
     c1_id = db.Column(db.Integer, primary_key = True)
